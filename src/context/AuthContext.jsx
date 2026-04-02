@@ -26,8 +26,8 @@ export function AuthProvider({ children }) {
         if (userDoc.exists()) {
           setUserRole(userDoc.data().role);
         } else {
-          // If no doc exists, create one. Explicitly make 'malfaraj9998@gmail.com' the admin.
-          const newRole = (user.email.toLowerCase() === 'malfaraj9998@gmail.com' || user.email.toLowerCase().includes('admin')) ? 'admin' : 'normal';
+          // In a multi-tenant system, every new user is the admin of their own isolated database.
+          const newRole = 'admin';
           await setDoc(userDocRef, { email: user.email, role: newRole });
           setUserRole(newRole);
         }
