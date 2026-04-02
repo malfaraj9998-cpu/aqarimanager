@@ -7,6 +7,7 @@ import { ClientProvider } from './context/ClientContext';
 import { FinanceProvider } from './context/FinanceContext';
 import { ContractProvider } from './context/ContractContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import MigrateData from './utils/MigrateData';
 
 // Layout
 import MainLayout from './layouts/MainLayout';
@@ -29,15 +30,19 @@ function ProtectedRoute({ children }) {
   return currentUser ? children : <Navigate to="/login" replace />;
 }
 
+// Set MIGRATION_DONE to true and redeploy once you've clicked "Start Migration" successfully.
+const MIGRATION_DONE = true;
+
 function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <ContractProvider>
-          <FinanceProvider>
+        <AuthProvider>
+          {!MIGRATION_DONE && <MigrateData />}
+          <PropertyProvider>
             <ClientProvider>
-              <PropertyProvider>
-                <AuthProvider>
+              <FinanceProvider>
+                <ContractProvider>
                   <BrowserRouter>
                     <Routes>
                       <Route path="/login" element={<Login />} />
@@ -55,11 +60,11 @@ function App() {
                       </Route>
                     </Routes>
                   </BrowserRouter>
-                </AuthProvider>
-              </PropertyProvider>
+                </ContractProvider>
+              </FinanceProvider>
             </ClientProvider>
-          </FinanceProvider>
-        </ContractProvider>
+          </PropertyProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

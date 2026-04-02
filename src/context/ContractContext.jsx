@@ -1,35 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
+import { useAuth } from './AuthContext';
 
 const ContractContext = createContext();
 
 export function ContractProvider({ children }) {
+  const { currentUser } = useAuth();
+  const uid = currentUser?.uid;
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'contracts'), async (snapshot) => {
-      if (!snapshot.empty) {
-        const contractsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Sort descending by creation date
-        contractsData.sort((a, b) => b.createdAt - a.createdAt);
-        setContracts(contractsData);
-      } else {
-        setContracts([]);
-      }
+    if (!uid) { setContracts([]); setLoading(false); return; }
+    const ref = collection(db, 'users', uid, 'contracts');
+    const unsubscribe = onSnapshot(ref, (snapshot) => {
+      const contractsData = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      contractsData.sort((a, b) => b.createdAt - a.createdAt);
+      setContracts(contractsData);
       setLoading(false);
     });
-
     return () => unsubscribe();
-  }, []);
+  }, [uid]);
 
-  // Generate ID e.g., 2026-001
+  const userCol = (col) => collection(db, 'users', uid, col);
+  const userDoc = (col, id) => doc(db, 'users', uid, col, id);
+
   const generateContractNumber = (existingContracts, startDate) => {
     const startYear = startDate ? new Date(startDate).getFullYear() : new Date().getFullYear();
     const yearContracts = existingContracts.filter(c => c.contractNumber?.startsWith(`${startYear}-`));
-    
-    // Find highest sequence
     let maxNum = 0;
     yearContracts.forEach(c => {
       const parts = c.contractNumber.split('-');
@@ -38,15 +37,12 @@ export function ContractProvider({ children }) {
         if (num > maxNum) maxNum = num;
       }
     });
-
-    const nextNum = maxNum + 1;
-    return `${startYear}-${nextNum.toString().padStart(3, '0')}`;
+    return `${startYear}-${(maxNum + 1).toString().padStart(3, '0')}`;
   };
 
   const addContract = async (data) => {
-    const newDocRef = doc(collection(db, 'contracts'));
+    const newDocRef = doc(userCol('contracts'));
     const contractNumber = generateContractNumber(contracts, data.startDate);
-    
     const newContract = {
       ...data,
       id: newDocRef.id,
@@ -54,35 +50,26 @@ export function ContractProvider({ children }) {
       createdAt: Date.now(),
       status: 'Active'
     };
-    
     await setDoc(newDocRef, newContract);
     return newContract;
   };
 
   const archiveContract = async (id) => {
-    await updateDoc(doc(db, 'contracts', id), { status: 'Archived' });
+    await updateDoc(userDoc('contracts', id), { status: 'Archived' });
   };
 
   const renewContract = async (oldContractId, newData) => {
-    // 1. Archive the old contract
     await archiveContract(oldContractId);
-    // 2. Add the new contract
     return await addContract(newData);
   };
 
-  // Helper selectors
   const activeContracts = contracts.filter(c => c.status === 'Active');
   const archivedContracts = contracts.filter(c => c.status === 'Archived');
 
   return (
     <ContractContext.Provider value={{
-      contracts,
-      activeContracts,
-      archivedContracts,
-      addContract,
-      archiveContract,
-      renewContract,
-      loading
+      contracts, activeContracts, archivedContracts,
+      addContract, archiveContract, renewContract, loading
     }}>
       {children}
     </ContractContext.Provider>
