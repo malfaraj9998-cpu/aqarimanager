@@ -1,0 +1,68 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
+import { PropertyProvider } from './context/PropertyContext';
+import { ClientProvider } from './context/ClientContext';
+import { FinanceProvider } from './context/FinanceContext';
+import { ContractProvider } from './context/ContractContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Layout
+import MainLayout from './layouts/MainLayout';
+
+// Pages
+import Login from './pages/Login/Login';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Finance from './pages/Finance/Finance';
+import TransactionDetails from './pages/Finance/TransactionDetails';
+import Clients from './pages/Clients/Clients';
+import ClientDetails from './pages/Clients/ClientDetails';
+import BuildingsList from './pages/Buildings/BuildingsList';
+import BuildingDetails from './pages/Buildings/BuildingDetails';
+import ContractsManager from './pages/Contracts/ContractsManager';
+import ContractWizard from './pages/Contracts/ContractWizard';
+
+function ProtectedRoute({ children }) {
+  const { currentUser } = useAuth();
+  if (currentUser === undefined) return <div>Loading...</div>;
+  return currentUser ? children : <Navigate to="/login" replace />;
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <ContractProvider>
+          <FinanceProvider>
+            <ClientProvider>
+              <PropertyProvider>
+                <AuthProvider>
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                        <Route index element={<Navigate to="/dashboard" replace />} />
+                        <Route path="dashboard" element={<Dashboard />} />
+                        <Route path="finance" element={<Finance />} />
+                        <Route path="finance/:id" element={<TransactionDetails />} />
+                        <Route path="clients" element={<Clients />} />
+                        <Route path="clients/:id" element={<ClientDetails />} />
+                        <Route path="buildings" element={<BuildingsList />} />
+                        <Route path="buildings/:id" element={<BuildingDetails />} />
+                        <Route path="contracts" element={<ContractsManager />} />
+                        <Route path="contracts/new" element={<ContractWizard />} />
+                      </Route>
+                    </Routes>
+                  </BrowserRouter>
+                </AuthProvider>
+              </PropertyProvider>
+            </ClientProvider>
+          </FinanceProvider>
+        </ContractProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
