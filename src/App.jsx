@@ -23,11 +23,19 @@ import BuildingsList from './pages/Buildings/BuildingsList';
 import BuildingDetails from './pages/Buildings/BuildingDetails';
 import ContractsManager from './pages/Contracts/ContractsManager';
 import ContractWizard from './pages/Contracts/ContractWizard';
+import AdminPanel from './pages/Admin/AdminPanel';
+import PendingApproval from './pages/Access/PendingApproval/PendingApproval';
+import RejectedAccess from './pages/Access/RejectedAccess/RejectedAccess';
+
 
 function ProtectedRoute({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, userStatus } = useAuth();
   if (currentUser === undefined) return <div>Loading...</div>;
-  return currentUser ? children : <Navigate to="/login" replace />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (userStatus === 'pending') return <Navigate to="/pending" replace />;
+  if (userStatus === 'rejected') return <Navigate to="/rejected" replace />;
+  
+  return children;
 }
 
 // Set MIGRATION_DONE to true and redeploy once you've clicked "Start Migration" successfully.
@@ -46,6 +54,8 @@ function App() {
                   <BrowserRouter>
                     <Routes>
                       <Route path="/login" element={<Login />} />
+                      <Route path="/pending" element={<PendingApproval />} />
+                      <Route path="/rejected" element={<RejectedAccess />} />
                       <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                         <Route index element={<Navigate to="/dashboard" replace />} />
                         <Route path="dashboard" element={<Dashboard />} />
@@ -57,6 +67,7 @@ function App() {
                         <Route path="buildings/:id" element={<BuildingDetails />} />
                         <Route path="contracts" element={<ContractsManager />} />
                         <Route path="contracts/new" element={<ContractWizard />} />
+                        <Route path="admin/users" element={<AdminPanel />} />
                       </Route>
                     </Routes>
                   </BrowserRouter>

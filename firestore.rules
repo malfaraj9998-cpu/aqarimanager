@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if currentUser is super admin
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'malfaraj9998@gmail.com';
+    }
+
+    match /users/{userId} {
+      // Super admin can read/write anyone's profile.
+      // Users can only read/write their own profile.
+      allow read, write: if isSuperAdmin() || (request.auth != null && request.auth.uid == userId);
+      
+      // Data collections (buildings, contracts, clients, finance)
+      match /{collection}/{document=**} {
+        // Super admins cannot read private user data (for security), but they can if you want.
+        // Currently keeping user private data isolated.
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+  }
+}

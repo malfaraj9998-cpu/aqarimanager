@@ -13,6 +13,8 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null); // 'admin' or 'normal'
+  const [userStatus, setUserStatus] = useState(null); // 'pending', 'approved', 'rejected'
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,17 +25,33 @@ export function AuthProvider({ children }) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
         
+        const isSuper = user.email.toLowerCase() === 'malfaraj9998@gmail.com';
+        setIsSuperAdmin(isSuper);
+
         if (userDoc.exists()) {
-          setUserRole(userDoc.data().role);
+          const data = userDoc.data();
+          setUserRole(data.role || 'admin');
+          
+          let currentStatus = data.status;
+          if (!currentStatus) {
+            // Retroactively approve existing users (including the super admin)
+            currentStatus = 'approved';
+            await setDoc(userDocRef, { status: currentStatus }, { merge: true });
+          }
+          setUserStatus(currentStatus);
         } else {
-          // In a multi-tenant system, every new user is the admin of their own isolated database.
-          const newRole = 'admin';
-          await setDoc(userDocRef, { email: user.email, role: newRole });
+          // New user sign up
+          const newRole = 'admin'; // they are admin of their own isolated database
+          const initialStatus = isSuper ? 'approved' : 'pending';
+          await setDoc(userDocRef, { email: user.email, role: newRole, status: initialStatus });
           setUserRole(newRole);
+          setUserStatus(initialStatus);
         }
       } else {
         setCurrentUser(null);
         setUserRole(null);
+        setUserStatus(null);
+        setIsSuperAdmin(false);
       }
       setLoading(false);
     });
@@ -56,6 +74,8 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser,
     userRole,
+    userStatus,
+    isSuperAdmin,
     login,
     signup,
     logout
