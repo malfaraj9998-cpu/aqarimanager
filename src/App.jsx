@@ -30,8 +30,15 @@ import RejectedAccess from './pages/Access/RejectedAccess/RejectedAccess';
 
 function ProtectedRoute({ children }) {
   const { currentUser, userStatus } = useAuth();
+  
   if (currentUser === undefined) return <div>Loading...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
+  
+  // Wait for userStatus to be fetched from Firestore before making a routing decision.
+  // When a user signs in or signs up, the Auth context might have currentUser but 
+  // is still awaiting the Firestore document for userStatus.
+  if (userStatus === null) return <div>Authenticating profile...</div>;
+
   if (userStatus === 'pending') return <Navigate to="/pending" replace />;
   if (userStatus === 'rejected') return <Navigate to="/rejected" replace />;
   
