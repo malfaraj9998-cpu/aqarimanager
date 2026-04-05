@@ -21,32 +21,37 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        // Fetch user role from Firestore
-        const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        const isSuper = user.email.toLowerCase() === 'malfaraj9998@gmail.com';
-        setIsSuperAdmin(isSuper);
-
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setUserRole(data.role || 'admin');
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
           
-          let currentStatus = data.status;
-          if (!currentStatus) {
-            // Retroactively approve existing users (including the super admin)
-            currentStatus = 'approved';
-            await setDoc(userDocRef, { status: currentStatus }, { merge: true });
+          const isSuper = user.email.toLowerCase() === 'malfaraj9998@gmail.com';
+          setIsSuperAdmin(isSuper);
+
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserRole(data.role || 'admin');
+            
+            let currentStatus = data.status;
+            if (!currentStatus) {
+              // Retroactively approve existing users (including the super admin)
+              currentStatus = 'approved';
+              await setDoc(userDocRef, { status: currentStatus }, { merge: true });
+            }
+            setUserStatus(currentStatus);
+          } else {
+            // New user sign up
+            const newRole = 'admin'; // they are admin of their own isolated database
+            const initialStatus = isSuper ? 'approved' : 'pending';
+            await setDoc(userDocRef, { email: user.email, role: newRole, status: initialStatus });
+            setUserRole(newRole);
+            setUserStatus(initialStatus);
           }
-          setUserStatus(currentStatus);
-        } else {
-          // New user sign up
-          const newRole = 'admin'; // they are admin of their own isolated database
-          const initialStatus = isSuper ? 'approved' : 'pending';
-          await setDoc(userDocRef, { email: user.email, role: newRole, status: initialStatus });
-          setUserRole(newRole);
-          setUserStatus(initialStatus);
+        } catch (error) {
+          console.error("Error setting up user profile:", error);
+          setUserStatus('rejected'); // Fallback to rejected so they don't hang if DB fails
         }
+
       } else {
         setCurrentUser(null);
         setUserRole(null);
@@ -54,6 +59,7 @@ export function AuthProvider({ children }) {
         setIsSuperAdmin(false);
       }
       setLoading(false);
+
     });
 
     return unsubscribe;
