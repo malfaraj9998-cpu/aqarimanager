@@ -21,35 +21,48 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
+        const userEmail = user.email ? user.email.trim().toLowerCase() : '';
+        const isSuper = userEmail === 'malfaraj9998@gmail.com' || userEmail === 'alfaraj1412@gmail.com';
+        setIsSuperAdmin(isSuper);
+
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
-          
-          const isSuper = user.email.toLowerCase() === 'malfaraj9998@gmail.com';
-          setIsSuperAdmin(isSuper);
+
 
           if (userDoc.exists()) {
             const data = userDoc.data();
             setUserRole(data.role || 'admin');
             
             let currentStatus = data.status;
-            if (!currentStatus) {
-              // Retroactively approve existing users (including the super admin)
+            
+            if (isSuper) {
               currentStatus = 'approved';
-              await setDoc(userDocRef, { status: currentStatus }, { merge: true });
+              if (data.status !== 'approved') {
+                setDoc(userDocRef, { status: currentStatus }, { merge: true }).catch(console.error);
+              }
+            } else if (!currentStatus) {
+              // Retroactively approve existing users
+              currentStatus = 'approved';
+              setDoc(userDocRef, { status: currentStatus }, { merge: true }).catch(console.error);
             }
             setUserStatus(currentStatus);
           } else {
             // New user sign up
             const newRole = 'admin'; // they are admin of their own isolated database
             const initialStatus = isSuper ? 'approved' : 'pending';
-            await setDoc(userDocRef, { email: user.email, role: newRole, status: initialStatus });
             setUserRole(newRole);
             setUserStatus(initialStatus);
+            setDoc(userDocRef, { email: user.email, role: newRole, status: initialStatus }).catch(console.error);
           }
         } catch (error) {
           console.error("Error setting up user profile:", error);
-          setUserStatus('rejected'); // Fallback to rejected so they don't hang if DB fails
+          if (isSuper) {
+            setUserRole('admin');
+            setUserStatus('approved');
+          } else {
+            setUserStatus('rejected'); // Fallback to rejected so they don't hang if DB fails
+          }
         }
 
       } else {

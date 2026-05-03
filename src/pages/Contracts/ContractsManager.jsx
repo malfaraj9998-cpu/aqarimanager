@@ -4,7 +4,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useContract } from '../../context/ContractContext';
 import { useClient } from '../../context/ClientContext';
 import { useProperty } from '../../context/PropertyContext';
-import { FileSignature, FileText, Search, Plus } from 'lucide-react';
+import { FileSignature, FileText, Search, Plus, Upload } from 'lucide-react';
+import PdfContractImportModal from '../../components/PdfContractImportModal';
 import './Contracts.css';
 
 export default function ContractsManager() {
@@ -16,6 +17,7 @@ export default function ContractsManager() {
 
   const [activeTab, setActiveTab] = useState('Active');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const displayedContracts = activeTab === 'Active' ? activeContracts : archivedContracts;
 
@@ -38,10 +40,16 @@ export default function ContractsManager() {
     <div className="contracts-page">
       <div className="page-header">
         <h1 className="page-title">{t('contractsLedger')}</h1>
-        <button className="btn-primary" onClick={() => navigate('/contracts/new')}>
-          <Plus size={18} style={{ display: 'inline', marginInlineEnd: '4px' }}/> 
-          {t('newContract')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn-secondary" onClick={() => setIsImportModalOpen(true)}>
+            <Upload size={18} style={{ display: 'inline', marginInlineEnd: '4px' }}/> 
+            Import PDF
+          </button>
+          <button className="btn-primary" onClick={() => navigate('/contracts/new')}>
+            <Plus size={18} style={{ display: 'inline', marginInlineEnd: '4px' }}/> 
+            {t('newContract')}
+          </button>
+        </div>
       </div>
 
       <div className="glass-panel main-panel">
@@ -142,6 +150,11 @@ export default function ContractsManager() {
           </table>
         </div>
       </div>
+      
+      <PdfContractImportModal 
+        isOpen={isImportModalOpen} 
+        onClose={() => setIsImportModalOpen(false)} 
+      />
     </div>
   );
 }

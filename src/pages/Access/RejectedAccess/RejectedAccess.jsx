@@ -1,10 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import '../PendingApproval/PendingApproval.css';
 
 export default function RejectedAccess() {
-  const { logout } = useAuth();
+  const { logout, userStatus } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userStatus === 'approved') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [userStatus, navigate]);
 
   return (
     <div className="pending-approval-container">

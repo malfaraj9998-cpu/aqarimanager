@@ -19,7 +19,11 @@ export default function Clients() {
   const [filterType, setFilterType] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', type: 'Retail', vat: '', mobile: '', email: '', nationality: '' });
+  const [formData, setFormData] = useState({
+    name: '', type: 'Individual', nationality: 'المملكة العربية السعودية',
+    idType: 'هوية وطنية', vat: '', mobile: '', email: '',
+    nationalAddress: '', selfRepresented: true,
+  });
 
   const { activeContracts, archivedContracts } = useContract();
 
@@ -40,9 +44,9 @@ export default function Clients() {
     });
 
     return clientsWithStatus.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.vat.includes(searchTerm) ||
-        (c.mobile && c.mobile.includes(searchTerm));
+      const matchSearch = (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (c.vat || '').includes(searchTerm) ||
+        (c.mobile || '').includes(searchTerm);
       const matchStatus = !filterStatus || c.computedStatus === filterStatus;
       const matchType = !filterType || c.type === filterType;
       return matchSearch && matchStatus && matchType;
@@ -53,14 +57,18 @@ export default function Clients() {
     e.preventDefault();
     addClient(formData);
     setIsModalOpen(false);
-    setFormData({ name: '', type: 'Retail', vat: '', mobile: '', email: '', nationality: '' });
+    setFormData({ name: '', type: 'Individual', nationality: 'المملكة العربية السعودية', idType: 'هوية وطنية', vat: '', mobile: '', email: '', nationalAddress: '', selfRepresented: true });
   };
 
   const handleExport = () => {
     const data = clients.map(c => ({
-      'Name': c.name, 'Type': c.type, 'ID/VAT': c.vat,
-      'Mobile': c.mobile, 'Email': c.email, 'Nationality': c.nationality,
-      'Contract Start': c.contractStart, 'Contract End': c.contractEnd, 'Status': c.status,
+      'Name / الاسم': c.name, 'Type': c.type,
+      'ID Type / نوع الهوية': c.idType || '',
+      'ID No. / رقم الهوية': c.vat,
+      'Mobile / الجوال': c.mobile, 'Email': c.email,
+      'Nationality / الجنسية': c.nationality,
+      'National Address / العنوان الوطني': c.nationalAddress || '',
+      'Status': c.computedStatus,
     }));
     exportToExcel(data, 'Clients', 'aqari-clients-export');
   };
@@ -124,9 +132,10 @@ export default function Clients() {
             <thead>
               <tr>
                 <th>{t('tenantName')}</th>
-                <th>{t('clientType')}</th>
-                <th>{t('idVatNumber')}</th>
+                <th>نوع الهوية / ID Type</th>
+                <th>رقم الهوية / ID No.</th>
                 <th>{t('contactInfo')}</th>
+                <th>العنوان الوطني</th>
                 <th>{t('status')}</th>
                 <th style={{ width: '40px' }}></th>
               </tr>
@@ -143,15 +152,18 @@ export default function Clients() {
                     <div className="font-medium">{client.name}</div>
                     <div className="text-secondary text-xs">{client.nationality}</div>
                   </td>
-                  <td className="text-secondary">{t(client.type) || client.type}</td>
-                  <td className="font-mono">{client.vat}</td>
+                  <td className="text-secondary" style={{ fontSize: '0.82rem' }}>{client.idType || '—'}</td>
+                  <td className="font-mono">{client.vat || '—'}</td>
                   <td className="text-secondary">
                     <div style={{ fontSize: '0.85rem' }}>{client.mobile || '—'}</div>
                     <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{client.email || '—'}</div>
                   </td>
+                  <td className="text-secondary" style={{ fontSize: '0.82rem', direction: 'rtl', textAlign: 'right' }}>
+                    {client.nationalAddress || '—'}
+                  </td>
                   <td>
-                    <span className={`status-badge ${client.status.toLowerCase().replace(/\s+/g, '-')}`}>
-                      {client.status === 'Active' ? t('active') : client.status === 'Expired' ? t('expired') : t('noContract')}
+                    <span className={`status-badge ${client.computedStatus.toLowerCase().replace(/\s+/g, '-')}`}>
+                      {client.computedStatus === 'Active' ? t('active') : client.computedStatus === 'Expired' ? t('expired') : t('noContract')}
                     </span>
                   </td>
                   <td>
@@ -160,7 +172,7 @@ export default function Clients() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan="6" className="text-center empty-state">{t('noClientsFound')}</td></tr>
+                <tr><td colSpan="7" className="text-center empty-state">{t('noClientsFound')}</td></tr>
               )}
             </tbody>
           </table>
@@ -169,9 +181,14 @@ export default function Clients() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={t('registerNewClient')}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          <div style={{ padding: '0.6rem 1rem', background: 'var(--primary-light)', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
+            👤 بيانات المستأجر — Tenant Data (Section 4)
+          </div>
+
           <div className="form-group">
-            <label>{t('fullNameCompany')}</label>
-            <input required type="text" className="form-input" placeholder="e.g. Ahmed Al-Farsi"
+            <label>الاسم الكامل / Full Name</label>
+            <input required type="text" className="form-input" placeholder="e.g. محمد ابراهيم عبدالعزيز الفرج"
               value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -186,28 +203,57 @@ export default function Clients() {
               </select>
             </div>
             <div className="form-group">
-              <label>{t('nationality')}</label>
-              <input type="text" className="form-input" placeholder="e.g. Saudi Arabia"
+              <label>الجنسية / Nationality</label>
+              <input type="text" className="form-input" placeholder="e.g. المملكة العربية السعودية"
                 value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} />
             </div>
           </div>
-          <div className="form-group">
-            <label>{t('idVatNumber')}</label>
-            <input required type="text" className="form-input" placeholder="e.g. 10xxxxxxxx"
-              value={formData.vat} onChange={(e) => setFormData({...formData, vat: e.target.value})} />
-          </div>
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label>{t('mobileNumber')}</label>
+              <label>نوع الهوية / ID Type</label>
+              <select className="form-input" value={formData.idType} onChange={(e) => setFormData({...formData, idType: e.target.value})}>
+                <option value="هوية وطنية">هوية وطنية — National ID</option>
+                <option value="إقامة">إقامة — Residency</option>
+                <option value="جواز سفر">جواز سفر — Passport</option>
+                <option value="سجل تجاري">سجل تجاري — CR</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>رقم الهوية / ID No.</label>
+              <input required type="text" className="form-input" placeholder="e.g. 1066484872"
+                value={formData.vat} onChange={(e) => setFormData({...formData, vat: e.target.value})} />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>رقم الجوال / Mobile</label>
               <input type="tel" className="form-input" placeholder="+9665xxxxxxxx"
                 value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} />
             </div>
             <div className="form-group">
-              <label>{t('emailAddress')}</label>
+              <label>البريد الإلكتروني / Email</label>
               <input type="email" className="form-input" placeholder="contact@domain.com"
                 value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
             </div>
           </div>
+
+          <div className="form-group">
+            <label>العنوان الوطني / National Address</label>
+            <input type="text" className="form-input" placeholder="e.g. الرياض, الرياض"
+              value={formData.nationalAddress} onChange={(e) => setFormData({...formData, nationalAddress: e.target.value})} />
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+            <input type="checkbox" checked={formData.selfRepresented}
+              onChange={(e) => setFormData({...formData, selfRepresented: e.target.checked})}
+              style={{ width: '16px', height: '16px', accentColor: 'var(--primary-color)' }} />
+            <span style={{ fontSize: '0.875rem' }}>
+              المستأجر مُمثَّل بنفسه — <span style={{ opacity: 0.7 }}>Tenant represented by himself/herself</span>
+            </span>
+          </label>
+
           <div className="modal-actions" style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
             <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>{t('cancel')}</button>
             <button type="submit" className="btn-primary">{t('saveClient')}</button>
