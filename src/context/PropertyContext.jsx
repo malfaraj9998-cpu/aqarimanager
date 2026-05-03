@@ -41,6 +41,7 @@ export function PropertyProvider({ children }) {
       initialUnits.push({ id: Date.now() + counter++, unitNumber: `O-${i}`, type: 'Office', status: 'Available', client: null });
     }
     await setDoc(newDocRef, { ...building, id: newDocRef.id, units: initialUnits, createdAt: Date.now() });
+    return newDocRef.id;
   };
 
   const addUnit = async (buildingId, unit) => {

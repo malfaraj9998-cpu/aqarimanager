@@ -98,6 +98,7 @@ export default function ContractWizard() {
             ...prev,
             clientId: data.resolvedClientId || '',
             buildingId: data.resolvedBuildingId || '',
+            unitId: data.resolvedUnitId || '',
             contractType: c.contractType || 'جديد',
             sealingDate: c.sealingDate || '',
             sealingLocation: c.sealingLocation || 'الرياض',

@@ -1,0 +1,8 @@
+Your web app aqari-manager-web has been successfully registered!
+Here are some details for your new web app:
+Project ID : aqari-manager
+App ID : 1:114750850351:web:95c0e304b27508f1de8dda
+Storage Bucket : aqari-manager.firebasestorage.app
+API Key : AIzaSyABXiSfA-Ej5a8bvAx_LurAcwsw5sCRiTM
+Auth Domain : aqari-manager.firebaseapp.com
+Messaging Sender ID : 114750850351

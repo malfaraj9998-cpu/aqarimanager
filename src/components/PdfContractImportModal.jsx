@@ -62,23 +62,69 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
         }
       }
 
-      // 2. Create or Find Building
+      // 2. Create or Find Building & Unit
       let buildingId = '';
+      let unitId = '';
       if (parsedData.building?.name || parsedData.building?.titleDeedNo) {
         const existingBuilding = buildings.find(b => 
           (parsedData.building.titleDeedNo && b.titleDeedNo === parsedData.building.titleDeedNo) || 
           b.name === parsedData.building.name
         );
+        
         if (existingBuilding) {
           buildingId = existingBuilding.id;
+          
+          // Check if unit exists
+          const existingUnit = existingBuilding.units?.find(u => u.unitNumber === parsedData.unit?.unitNumber);
+          if (existingUnit) {
+            unitId = existingUnit.id;
+          } else if (parsedData.unit?.unitNumber) {
+            const newUnitId = Date.now();
+            await addUnit(buildingId, {
+              id: newUnitId,
+              unitNumber: parsedData.unit.unitNumber,
+              type: parsedData.unit.type || 'Flat',
+              floor: parsedData.unit.floor || '1',
+              unitArea: parsedData.unit.unitArea || '',
+              electricityMeterNo: parsedData.unit.electricityMeterNo || '',
+              waterMeterNo: parsedData.unit.waterMeterNo || '',
+            });
+            unitId = newUnitId;
+          }
         } else {
-          // Can be created manually later if missing
+          // Create New Building
+          const newBId = await addBuilding({
+            name: parsedData.building.name || `Building (Title Deed: ${parsedData.building.titleDeedNo})`,
+            type: parsedData.building.type || 'Residential',
+            location: parsedData.building.location || parsedData.building.nationalAddress || '',
+            titleDeedNo: parsedData.building.titleDeedNo || '',
+            ownerName: parsedData.building.ownerName || '',
+            ownerIdNo: parsedData.building.ownerIdNo || '',
+            flatsCount: 0, shopsCount: 0, officesCount: 0,
+          });
+          buildingId = newBId;
+
+          // Create Unit in new building
+          if (parsedData.unit?.unitNumber) {
+            const newUnitId = Date.now();
+            await addUnit(newBId, {
+              id: newUnitId,
+              unitNumber: parsedData.unit.unitNumber,
+              type: parsedData.unit.type || 'Flat',
+              floor: parsedData.unit.floor || '1',
+              unitArea: parsedData.unit.unitArea || '',
+              electricityMeterNo: parsedData.unit.electricityMeterNo || '',
+              waterMeterNo: parsedData.unit.waterMeterNo || '',
+            });
+            unitId = newUnitId;
+          }
         }
       }
 
       // Attach resolved IDs to the payload
       parsedData.resolvedClientId = clientId;
       parsedData.resolvedBuildingId = buildingId;
+      parsedData.resolvedUnitId = unitId;
 
       // To keep it simple and robust, we will store the parsed data in sessionStorage
       // and navigate to the Contract Wizard. The wizard will read it and pre-fill everything.
