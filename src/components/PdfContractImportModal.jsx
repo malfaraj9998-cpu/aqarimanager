@@ -41,7 +41,7 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
       setStep('review');
     } catch (err) {
       console.error(err);
-      setError('Failed to extract data from PDF. Please make sure it is a valid Ejar contract.');
+      setError(`Failed to extract data: ${err.message || JSON.stringify(err)}`);
       setStep('upload');
     } finally {
       setLoading(false);
