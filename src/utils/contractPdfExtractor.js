@@ -135,11 +135,7 @@ export async function extractContractData(file) {
   };
 
   const model = getGenerativeModel(ai, { 
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: schema,
-    }
+    model: "gemini-2.5-flash"
   });
 
   const prompt = `You are a highly capable AI specialized in parsing Arabic Ejar contracts (Saudi Arabia). 
@@ -153,7 +149,13 @@ Extract all information from the provided Ejar contract PDF document and map it 
 `;
 
   try {
-    const result = await model.generateContent([prompt, { inlineData }]);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }, { inlineData }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: schema,
+      }
+    });
     return JSON.parse(result.response.text());
   } catch (error) {
     console.error("Error extracting contract data:", error);
