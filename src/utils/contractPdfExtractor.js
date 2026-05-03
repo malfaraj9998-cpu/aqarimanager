@@ -1,5 +1,5 @@
-import { getVertexAI, getGenerativeModel, Schema, Type } from "firebase/vertexai";
-import { db, app } from "./firebase"; // Assuming we have an initialized app
+import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
+import app, { db } from "./firebase"; 
 
 export async function extractContractData(file) {
   // Convert File to base64 generic object
@@ -14,127 +14,127 @@ export async function extractContractData(file) {
     mimeType: file.type || "application/pdf",
   };
 
-  const vertexAI = getVertexAI(app);
+  const ai = getAI(app, { backend: new GoogleAIBackend() });
   
   // Use schema for structured output
   const schema = {
-    type: Type.OBJECT,
+    type: "OBJECT",
     properties: {
       client: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          name: { type: Type.STRING },
-          type: { type: Type.STRING, description: "Individual, Retail, F&B, Tech Corporation, Other" },
-          nationality: { type: Type.STRING },
-          idType: { type: Type.STRING, description: "هوية وطنية, إقامة, جواز سفر, سجل تجاري" },
-          vat: { type: Type.STRING, description: "ID Number" },
-          mobile: { type: Type.STRING },
-          email: { type: Type.STRING },
-          nationalAddress: { type: Type.STRING },
-          selfRepresented: { type: Type.BOOLEAN }
+          name: { type: "STRING" },
+          type: { type: "STRING", description: "Individual, Retail, F&B, Tech Corporation, Other" },
+          nationality: { type: "STRING" },
+          idType: { type: "STRING", description: "هوية وطنية, إقامة, جواز سفر, سجل تجاري" },
+          vat: { type: "STRING", description: "ID Number" },
+          mobile: { type: "STRING" },
+          email: { type: "STRING" },
+          nationalAddress: { type: "STRING" },
+          selfRepresented: { type: "BOOLEAN" }
         }
       },
       building: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          name: { type: Type.STRING },
-          location: { type: Type.STRING },
-          type: { type: Type.STRING },
-          ownerName: { type: Type.STRING },
-          ownerNationality: { type: Type.STRING },
-          ownerIdType: { type: Type.STRING },
-          ownerIdNo: { type: Type.STRING },
-          ownerMobile: { type: Type.STRING },
-          ownerEmail: { type: Type.STRING },
-          ownerNationalAddress: { type: Type.STRING },
-          ownerSelfRepresented: { type: Type.BOOLEAN },
-          titleDeedNo: { type: Type.STRING },
-          titleDeedIssuer: { type: Type.STRING },
-          titleDeedIssueDate: { type: Type.STRING },
-          titleDeedIssuedFrom: { type: Type.STRING },
-          propertyType: { type: Type.STRING },
-          propertyUsage: { type: Type.STRING },
-          numberOfFloors: { type: Type.STRING },
-          numberOfParkingLots: { type: Type.STRING },
-          numberOfElevators: { type: Type.STRING },
-          nationalAddress: { type: Type.STRING }
+          name: { type: "STRING" },
+          location: { type: "STRING" },
+          type: { type: "STRING" },
+          ownerName: { type: "STRING" },
+          ownerNationality: { type: "STRING" },
+          ownerIdType: { type: "STRING" },
+          ownerIdNo: { type: "STRING" },
+          ownerMobile: { type: "STRING" },
+          ownerEmail: { type: "STRING" },
+          ownerNationalAddress: { type: "STRING" },
+          ownerSelfRepresented: { type: "BOOLEAN" },
+          titleDeedNo: { type: "STRING" },
+          titleDeedIssuer: { type: "STRING" },
+          titleDeedIssueDate: { type: "STRING" },
+          titleDeedIssuedFrom: { type: "STRING" },
+          propertyType: { type: "STRING" },
+          propertyUsage: { type: "STRING" },
+          numberOfFloors: { type: "STRING" },
+          numberOfParkingLots: { type: "STRING" },
+          numberOfElevators: { type: "STRING" },
+          nationalAddress: { type: "STRING" }
         }
       },
       unit: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          unitNumber: { type: Type.STRING },
-          type: { type: Type.STRING, description: "Flat, Shop, Office, Villa, Warehouse" },
-          floor: { type: Type.STRING },
-          unitArea: { type: Type.STRING },
-          furnished: { type: Type.BOOLEAN },
-          kitchenCabinets: { type: Type.BOOLEAN },
-          furnishingStatus: { type: Type.STRING },
-          numberOfAC: { type: Type.STRING },
-          electricityMeterNo: { type: Type.STRING },
-          electricityMeterReading: { type: Type.STRING },
-          gasMeterNo: { type: Type.STRING },
-          gasMeterReading: { type: Type.STRING },
-          waterMeterNo: { type: Type.STRING },
-          waterMeterReading: { type: Type.STRING }
+          unitNumber: { type: "STRING" },
+          type: { type: "STRING", description: "Flat, Shop, Office, Villa, Warehouse" },
+          floor: { type: "STRING" },
+          unitArea: { type: "STRING" },
+          furnished: { type: "BOOLEAN" },
+          kitchenCabinets: { type: "BOOLEAN" },
+          furnishingStatus: { type: "STRING" },
+          numberOfAC: { type: "STRING" },
+          electricityMeterNo: { type: "STRING" },
+          electricityMeterReading: { type: "STRING" },
+          gasMeterNo: { type: "STRING" },
+          gasMeterReading: { type: "STRING" },
+          waterMeterNo: { type: "STRING" },
+          waterMeterReading: { type: "STRING" }
         }
       },
       contract: {
-        type: Type.OBJECT,
+        type: "OBJECT",
         properties: {
-          contractType: { type: Type.STRING },
-          sealingDate: { type: Type.STRING },
-          sealingLocation: { type: Type.STRING },
-          startDate: { type: Type.STRING },
-          endDate: { type: Type.STRING },
-          annualRent: { type: Type.STRING },
-          paymentFrequency: { type: Type.STRING },
-          ejarContractNumber: { type: Type.STRING },
-          brokerageEntityName: { type: Type.STRING },
-          brokerageCRNo: { type: Type.STRING },
-          brokerageLandlineNo: { type: Type.STRING },
-          brokerageFaxNo: { type: Type.STRING },
-          brokerName: { type: Type.STRING },
-          brokerNationality: { type: Type.STRING },
-          brokerIdType: { type: Type.STRING },
-          brokerIdNo: { type: Type.STRING },
-          brokerMobile: { type: Type.STRING },
-          brokerEmail: { type: Type.STRING },
-          securityDeposit: { type: Type.STRING },
-          electricityAnnualAmount: { type: Type.STRING },
-          gasAnnualAmount: { type: Type.STRING },
-          waterAnnualAmount: { type: Type.STRING },
-          parkingAnnualAmount: { type: Type.STRING },
-          regularRentPayment: { type: Type.STRING },
-          lastRentPayment: { type: Type.STRING },
-          numberOfRentPayments: { type: Type.STRING },
-          totalContractValue: { type: Type.STRING },
-          paymentMethods: { type: Type.STRING },
-          parkingLotsRented: { type: Type.STRING },
-          tenantAuthority: { type: Type.STRING }
+          contractType: { type: "STRING" },
+          sealingDate: { type: "STRING" },
+          sealingLocation: { type: "STRING" },
+          startDate: { type: "STRING" },
+          endDate: { type: "STRING" },
+          annualRent: { type: "STRING" },
+          paymentFrequency: { type: "STRING" },
+          ejarContractNumber: { type: "STRING" },
+          brokerageEntityName: { type: "STRING" },
+          brokerageCRNo: { type: "STRING" },
+          brokerageLandlineNo: { type: "STRING" },
+          brokerageFaxNo: { type: "STRING" },
+          brokerName: { type: "STRING" },
+          brokerNationality: { type: "STRING" },
+          brokerIdType: { type: "STRING" },
+          brokerIdNo: { type: "STRING" },
+          brokerMobile: { type: "STRING" },
+          brokerEmail: { type: "STRING" },
+          securityDeposit: { type: "STRING" },
+          electricityAnnualAmount: { type: "STRING" },
+          gasAnnualAmount: { type: "STRING" },
+          waterAnnualAmount: { type: "STRING" },
+          parkingAnnualAmount: { type: "STRING" },
+          regularRentPayment: { type: "STRING" },
+          lastRentPayment: { type: "STRING" },
+          numberOfRentPayments: { type: "STRING" },
+          totalContractValue: { type: "STRING" },
+          paymentMethods: { type: "STRING" },
+          parkingLotsRented: { type: "STRING" },
+          tenantAuthority: { type: "STRING" }
         }
       },
       paymentSchedule: {
-        type: Type.ARRAY,
+        type: "ARRAY",
         items: {
-          type: Type.OBJECT,
+          type: "OBJECT",
           properties: {
-            no: { type: Type.NUMBER },
-            rentalPeriodFrom: { type: Type.STRING },
-            rentalPeriodTo: { type: Type.STRING },
-            dueDateAD: { type: Type.STRING },
-            dueDateAH: { type: Type.STRING },
-            paymentDeadlineAD: { type: Type.STRING },
-            paymentDeadlineAH: { type: Type.STRING },
-            durationDays: { type: Type.STRING },
-            amount: { type: Type.STRING }
+            no: { type: "NUMBER" },
+            rentalPeriodFrom: { type: "STRING" },
+            rentalPeriodTo: { type: "STRING" },
+            dueDateAD: { type: "STRING" },
+            dueDateAH: { type: "STRING" },
+            paymentDeadlineAD: { type: "STRING" },
+            paymentDeadlineAH: { type: "STRING" },
+            durationDays: { type: "STRING" },
+            amount: { type: "STRING" }
           }
         }
       }
     }
   };
 
-  const model = getGenerativeModel(vertexAI, { 
+  const model = getGenerativeModel(ai, { 
     model: "gemini-2.5-flash",
     generationConfig: {
       responseMimeType: "application/json",
