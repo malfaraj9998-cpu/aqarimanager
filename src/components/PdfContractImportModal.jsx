@@ -57,8 +57,8 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
         if (existingClient) {
           clientId = existingClient.id;
         } else {
-          const newClient = await addClient(parsedData.client);
-          clientId = newClient.id;
+          const newClientId = await addClient(parsedData.client);
+          clientId = newClientId;
         }
       }
 

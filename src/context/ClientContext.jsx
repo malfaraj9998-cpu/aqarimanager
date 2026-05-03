@@ -29,6 +29,7 @@ export function ClientProvider({ children }) {
   const addClient = async (data) => {
     const newDocRef = doc(userCol('clients'));
     await setDoc(newDocRef, { ...data, id: newDocRef.id, createdAt: Date.now() });
+    return newDocRef.id;
   };
 
   const updateClient = async (id, data) => {
