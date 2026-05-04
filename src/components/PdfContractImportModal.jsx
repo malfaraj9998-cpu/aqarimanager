@@ -10,7 +10,7 @@ import { useLanguage } from '../context/LanguageContext';
 export default function PdfContractImportModal({ isOpen, onClose }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { addBuilding, buildings } = useProperty();
+  const { addBuilding, addUnit, buildings } = useProperty();
   const { addClient, clients } = useClient();
 
   const [file, setFile] = useState(null);
