@@ -5,12 +5,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import './Layout.css';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen }) {
   const { t, language } = useLanguage();
   const { isSuperAdmin } = useAuth();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="logo-container">
         <Building size={28} />
         <span>{language === 'ar' ? 'عقاري مانجر' : 'Aqari Manager'}</span>

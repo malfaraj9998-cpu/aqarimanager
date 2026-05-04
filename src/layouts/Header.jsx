@@ -1,12 +1,12 @@
 import React from 'react';
-import { Languages, Search, LogOut, User } from 'lucide-react';
+import { Languages, Search, LogOut, User, Menu, Building } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './Layout.css';
 
-export default function Header() {
-  const { toggleLanguage, t } = useLanguage();
+export default function Header({ onMenuClick }) {
+  const { toggleLanguage, t, language } = useLanguage();
   const { currentUser, userRole, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -21,6 +21,17 @@ export default function Header() {
 
   return (
     <header className="header">
+      <button className="hamburger-btn" onClick={onMenuClick}>
+        <Menu size={24} />
+      </button>
+
+      <div className="header-logo-mobile">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)' }}>
+          <Building size={20} />
+          <span>{language === 'ar' ? 'عقاري مانجر' : 'Aqari Manager'}</span>
+        </div>
+      </div>
+
       <div className="header-search">
         <Search size={18} className="search-icon" />
         <input type="text" placeholder={t('search')} className="search-input" />
