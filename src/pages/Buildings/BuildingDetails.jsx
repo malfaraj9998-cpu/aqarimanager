@@ -4,6 +4,7 @@ import { ArrowLeft, Search, Filter, Pencil, Trash2, MoreVertical, X, ChevronRigh
 import { useLanguage } from '../../context/LanguageContext';
 import { useProperty } from '../../context/PropertyContext';
 import { useAuth } from '../../context/AuthContext';
+import { useContract } from '../../context/ContractContext';
 import Modal from '../../components/Modal';
 import '../../components/ActionMenu.css';
 import './Buildings.css';
@@ -44,6 +45,7 @@ export default function BuildingDetails() {
   const navigate = useNavigate();
   const { buildings, loading, addUnit, updateUnit, deleteUnit } = useProperty();
   const { userRole } = useAuth();
+  const { activeContracts } = useContract();
   const isAdmin = userRole === 'admin';
 
   const building = buildings.find(b => b.id === id);
@@ -84,7 +86,20 @@ export default function BuildingDetails() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (unitId) => { if (window.confirm('Delete this unit?')) deleteUnit(building.id, unitId); };
+  const handleDelete = (unitId) => {
+    // Block deletion if any active contract references this unit
+    const hasContract = activeContracts.some(
+      c => c.buildingId === building.id && String(c.unitId) === String(unitId)
+    );
+    if (hasContract) {
+      alert('⚠️ Cannot delete this unit — it has an active contract. Please archive or terminate the contract first.');
+      return;
+    }
+    if (window.confirm('Delete this unit? This action cannot be undone.')) {
+      deleteUnit(building.id, unitId);
+      setIsModalOpen(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
