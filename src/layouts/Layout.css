@@ -216,7 +216,7 @@
   color: var(--accent-primary);
 }
 
-/* ── Tablet: ≤ 900px ── */
+/* ── Tablet & Mobile: ≤ 900px ── */
 @media (max-width: 900px) {
   .header-search {
     display: none;
@@ -229,10 +229,7 @@
   .header {
     padding: 0 1rem;
   }
-}
 
-/* ── Mobile: ≤ 680px ── */
-@media (max-width: 680px) {
   .sidebar {
     position: fixed;
     top: 0;

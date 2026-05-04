@@ -308,7 +308,16 @@
   color: var(--success-text);
 }
 
+@media (max-width: 900px) {
+  .form-container {
+    padding: 1.5rem 1rem;
+  }
+}
+
 @media (max-width: 640px) {
+  .form-container {
+    padding: 1rem 0.5rem;
+  }
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -316,6 +325,18 @@
     gap: 0.25rem;
   }
   .step-label {
-    font-size: 0.7rem;
+    display: none; /* Hide labels on very small screens to avoid overflow */
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+  .wizard-actions {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  .wizard-actions button {
+    width: 100%;
   }
 }
