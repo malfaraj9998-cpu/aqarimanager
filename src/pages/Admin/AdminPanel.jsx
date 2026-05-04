@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../../utils/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { ShieldCheck, XCircle, Clock } from 'lucide-react';
 import './AdminPanel.css';
 
+const SUPER_ADMIN_EMAILS = ['malfaraj9998@gmail.com', 'alfaraj1412@gmail.com'];
+
 export default function AdminPanel() {
+  const { isSuperAdmin } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Defense-in-depth: render nothing if not super admin
+  useEffect(() => {
+    if (!isSuperAdmin) navigate('/dashboard', { replace: true });
+  }, [isSuperAdmin, navigate]);
+
+  if (!isSuperAdmin) return null;
 
   const fetchUsers = async () => {
     try {
@@ -59,7 +72,7 @@ export default function AdminPanel() {
           <tbody>
             {users.map(user => (
               <tr key={user.id}>
-                <td>{user.email} {user.email === 'malfaraj9998@gmail.com' && <span className="badge super">Super</span>}</td>
+                <td>{user.email} {SUPER_ADMIN_EMAILS.includes(user.email) && <span className="badge super">Super</span>}</td>
                 <td>
                   <span className={`status-badge ${user.status}`}>
                     {user.status === 'approved' && <ShieldCheck size={14} />}
@@ -69,7 +82,7 @@ export default function AdminPanel() {
                   </span>
                 </td>
                 <td>
-                  {user.email !== 'malfaraj9998@gmail.com' && (
+                  {!SUPER_ADMIN_EMAILS.includes(user.email) && (
                     <div className="action-buttons">
                       {user.status !== 'approved' && (
                         <button onClick={() => handleUpdateStatus(user.id, 'approved')} className="btn-approve">Approve</button>

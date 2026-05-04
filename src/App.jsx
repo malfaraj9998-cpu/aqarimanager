@@ -34,14 +34,19 @@ function ProtectedRoute({ children }) {
   if (currentUser === undefined) return <div>Loading...</div>;
   if (!currentUser) return <Navigate to="/login" replace />;
   
-  // Wait for userStatus to be fetched from Firestore before making a routing decision.
-  // When a user signs in or signs up, the Auth context might have currentUser but 
-  // is still awaiting the Firestore document for userStatus.
   if (userStatus === null) return <div>Authenticating profile...</div>;
 
   if (userStatus === 'pending') return <Navigate to="/pending" replace />;
   if (userStatus === 'rejected') return <Navigate to="/rejected" replace />;
   
+  return children;
+}
+
+function SuperAdminRoute({ children }) {
+  const { isSuperAdmin, currentUser, userStatus } = useAuth();
+  if (currentUser === undefined || userStatus === null) return <div>Loading...</div>;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />;
   return children;
 }
 
@@ -74,7 +79,7 @@ function App() {
                         <Route path="buildings/:id" element={<BuildingDetails />} />
                         <Route path="contracts" element={<ContractsManager />} />
                         <Route path="contracts/new" element={<ContractWizard />} />
-                        <Route path="admin/users" element={<AdminPanel />} />
+                        <Route path="admin/users" element={<SuperAdminRoute><AdminPanel /></SuperAdminRoute>} />
                       </Route>
                     </Routes>
                   </BrowserRouter>

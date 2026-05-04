@@ -92,6 +92,8 @@ export default function ContractWizard() {
         const stored = sessionStorage.getItem('importedEjarContract');
         if (stored) {
           const data = JSON.parse(stored);
+          // Clear PII from sessionStorage immediately after reading
+          sessionStorage.removeItem('importedEjarContract');
           const c = data.contract || {};
           
           setForm(prev => ({
