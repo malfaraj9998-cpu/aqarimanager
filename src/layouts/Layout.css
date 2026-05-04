@@ -248,6 +248,10 @@
     transform: translateX(0);
   }
 
+  [dir='rtl'] .sidebar.open {
+    transform: translateX(0);
+  }
+
   .hamburger-btn {
     display: flex;
   }
