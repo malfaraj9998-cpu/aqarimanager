@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { useAuth } from './AuthContext';
 
@@ -45,11 +45,14 @@ export function PropertyProvider({ children }) {
   };
 
   const addUnit = async (buildingId, unit) => {
-    const building = buildings.find(b => b.id === buildingId);
-    if (!building) return;
-    const newUnit = { ...unit, id: Date.now(), status: 'Available', client: null };
+    const docRef = userDoc('buildings', buildingId);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return;
+    const building = snap.data();
+    
+    const newUnit = { ...unit, id: unit.id || Date.now(), status: 'Available', client: null };
     const updatedUnits = [newUnit, ...(building.units || [])];
-    await updateDoc(userDoc('buildings', buildingId), { units: updatedUnits });
+    await updateDoc(docRef, { units: updatedUnits });
   };
 
   const updateUnit = async (buildingId, unitId, updates) => {

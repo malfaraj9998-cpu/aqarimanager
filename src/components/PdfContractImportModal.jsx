@@ -49,6 +49,8 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
   };
 
   const handleApprove = async () => {
+    setLoading(true);
+    setError(null);
     try {
       // 1. Create or Find Client
       let clientId = '';
@@ -126,8 +128,7 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
       parsedData.resolvedBuildingId = buildingId;
       parsedData.resolvedUnitId = unitId;
 
-      // To keep it simple and robust, we will store the parsed data in sessionStorage
-      // and navigate to the Contract Wizard. The wizard will read it and pre-fill everything.
+      // Store parsed data in sessionStorage
       sessionStorage.setItem('importedEjarContract', JSON.stringify(parsedData));
       
       onClose();
@@ -140,14 +141,20 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
 
     } catch (err) {
       console.error(err);
-      setError('An error occurred while approving the data.');
+      setError('An error occurred while approving the data: ' + err.message);
+      alert('Error during approval: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const isStepReview = step === 'review' && parsedData;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="استيراد عقد إيجار من PDF — Import Ejar Contract">
       {step === 'upload' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', padding: '2rem 1rem' }}>
+          {/* ... existing upload UI ... */}
           <div style={{ textAlign: 'center' }}>
             <FileText size={48} className="text-primary" style={{ marginBottom: '1rem', opacity: 0.8 }} />
             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Upload Arabic Ejar PDF</h3>
@@ -182,8 +189,8 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
 
           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
             <button className="btn-secondary" onClick={onClose}>{t('cancel')}</button>
-            <button className="btn-primary" disabled={!file} onClick={handleExtract}>
-              Extract Data
+            <button className="btn-primary" disabled={!file || loading} onClick={handleExtract}>
+              {loading ? 'Processing...' : 'Extract Data'}
             </button>
           </div>
         </div>
@@ -199,7 +206,7 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
         </div>
       )}
 
-      {step === 'review' && parsedData && (
+      {isStepReview && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
             <h3 style={{ fontSize: '1.05rem', marginBottom: '0.75rem', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -240,9 +247,9 @@ export default function PdfContractImportModal({ isOpen, onClose }) {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-            <button className="btn-secondary" onClick={() => setStep('upload')}>Cancel & Re-upload</button>
-            <button className="btn-primary" onClick={handleApprove}>
-              Approve & Continue to Wizard
+            <button className="btn-secondary" disabled={loading} onClick={() => setStep('upload')}>Cancel & Re-upload</button>
+            <button className="btn-primary" disabled={loading} onClick={handleApprove}>
+              {loading ? 'Preparing Wizard...' : 'Approve & Continue to Wizard'}
             </button>
           </div>
         </div>
